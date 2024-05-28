@@ -85,7 +85,10 @@ const router = useRouter();
 const loadAvailabilities = async () => {
   try {
     const { data } = await axios.get('/api/availabilities');
-    allAvailabilities.value = data;
+    allAvailabilities.value = data.map(item => ({
+      pseudo: item.pseudo,
+      availabilities: item.availabilities || Array(31).fill(false),
+    }));
   } catch (error) {
     console.error(error);
   }

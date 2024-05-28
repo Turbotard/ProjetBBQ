@@ -8,7 +8,10 @@
             <v-row>
               <v-col v-for="(day, index) in days" :key="index" cols="12" sm="6" md="4">
                 <v-card
-                  :class="{'green lighten-4': availabilities[index], 'red lighten-4': !availabilities[index]}"
+                  :class="{
+                    'green lighten-4': availabilities[index] === true,
+                    'red lighten-4': availabilities[index] === false
+                  }"
                   class="ma-2"
                   outlined
                   @click="toggleAvailability(index)"
@@ -49,20 +52,24 @@ import { useRouter } from 'vue-router';
 const pseudo = ref('');
 const days = Array.from({ length: 31 }, (_, i) => `Juillet ${i + 1}`);
 const availabilities = ref(Array(31).fill(false));
+const router = useRouter();
 const passwordDialog = ref(false);
 const password = ref('');
-const router = useRouter();
 
 const toggleAvailability = (index) => {
-  availabilities.value[index] = !availabilities.value[index];
+  if (availabilities.value[index] !== undefined) {
+    availabilities.value[index] = !availabilities.value[index];
+  }
 };
 
 const saveAvailabilities = async () => {
+  password.value = localStorage.getItem('password') || '';
+
   if (!password.value) {
-    passwordDialog.value = true;
+    alert('Mot de passe requis');
     return;
   }
-  
+
   try {
     await axios.post('/api/availabilities', {
       pseudo: pseudo.value,
@@ -70,10 +77,9 @@ const saveAvailabilities = async () => {
       password: password.value,
     });
     alert('Disponibilités sauvegardées!');
-    passwordDialog.value = false;
   } catch (error) {
     console.error(error);
-    alert(error.response.data.error || "Une erreur s'est produite. Veuillez réessayer.");
+    alert(error.response?.data?.error || "Une erreur s'est produite. Veuillez réessayer.");
   }
 };
 
@@ -81,7 +87,7 @@ const loadAvailabilities = async () => {
   try {
     const { data } = await axios.get('/api/availabilities');
     const userAvailability = data.find(item => item.pseudo === pseudo.value);
-    if (userAvailability) {
+    if (userAvailability && userAvailability.availabilities) {
       availabilities.value = userAvailability.availabilities;
     } else {
       availabilities.value = Array(31).fill(false);
@@ -94,6 +100,7 @@ const loadAvailabilities = async () => {
 const disconnect = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('pseudo');
+    localStorage.removeItem('password');
     router.push('/');
   }
 };
