@@ -18,6 +18,9 @@
                   @click="openDialog(index)"
                 >
                   <v-card-title>{{ day }}</v-card-title>
+                  <v-card-subtitle>
+                    {{ countAvailabilities(index, true) }} Présents, {{ countAvailabilities(index, false) }} Absents
+                  </v-card-subtitle>
                 </v-card>
               </v-col>
             </v-row>
