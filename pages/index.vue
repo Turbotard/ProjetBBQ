@@ -21,6 +21,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import bcrypt from 'bcryptjs';
 
 const pseudo = ref('');
 const password = ref('');
@@ -28,13 +29,16 @@ const router = useRouter();
 
 const checkCredentials = async () => {
   try {
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password.value, salt);
+
     const { data } = await axios.post('/api/checkUser', {
       pseudo: pseudo.value,
-      password: password.value,
+      password: hashedPassword,
     });
 
     localStorage.setItem('pseudo', pseudo.value);
-    localStorage.setItem('password', password.value);
+    localStorage.setItem('password', hashedPassword);
     router.push('/dispo');
   } catch (error) {
     console.error(error);
