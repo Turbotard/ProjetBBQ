@@ -26,6 +26,18 @@
         </v-card>
       </v-col>
     </v-row>
+    <v-dialog v-model="passwordDialog" persistent max-width="400">
+      <v-card>
+        <v-card-title class="headline">Mot de passe requis</v-card-title>
+        <v-card-text>
+          <v-text-field v-model="password" label="Mot de passe" type="password" outlined></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="green darken-1" text @click="saveAvailabilities">Confirmer</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -37,6 +49,8 @@ import { useRouter } from 'vue-router';
 const pseudo = ref('');
 const days = Array.from({ length: 31 }, (_, i) => `Juillet ${i + 1}`);
 const availabilities = ref(Array(31).fill(false));
+const passwordDialog = ref(false);
+const password = ref('');
 const router = useRouter();
 
 const toggleAvailability = (index) => {
@@ -44,14 +58,22 @@ const toggleAvailability = (index) => {
 };
 
 const saveAvailabilities = async () => {
+  if (!password.value) {
+    passwordDialog.value = true;
+    return;
+  }
+  
   try {
     await axios.post('/api/availabilities', {
       pseudo: pseudo.value,
       availabilities: availabilities.value,
+      password: password.value,
     });
     alert('Disponibilités sauvegardées!');
+    passwordDialog.value = false;
   } catch (error) {
     console.error(error);
+    alert(error.response.data.error || "Une erreur s'est produite. Veuillez réessayer.");
   }
 };
 
@@ -91,5 +113,9 @@ onMounted(() => {
 
 .red.lighten-4 {
   border: 2px solid red;
+}
+
+.yellow.lighten-4 {
+  border: 2px solid yellow;
 }
 </style>
