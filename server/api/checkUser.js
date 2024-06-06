@@ -39,24 +39,25 @@ export default eventHandler(async (event) => {
     const collection = db.collection('users');
 
     const user = await collection.findOne({ pseudo });
-    if (!user) {
-      return {
-        status: 400,
-        body: { error: 'Invalid pseudo or password' },
-      };
-    }
 
-    const isValid = bcrypt.compareSync(password, user.password);
-    if (!isValid) {
-      return {
-        status: 400,
-        body: { error: 'Invalid pseudo or password' },
-      };
+    if (user) {
+      // Verify password
+      const isValid = bcrypt.compareSync(password, user.password);
+      if (!isValid) {
+        return {
+          status: 401,
+          body: { error: 'Incorrect password' },
+        };
+      }
+    } else {
+      // Hash the password and create user
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await collection.insertOne({ pseudo, password: hashedPassword });
     }
 
     return {
       status: 200,
-      body: { message: 'Login successful' },
+      body: { message: 'Authenticated successfully!' },
     };
   } catch (error) {
     console.error('API error', error);
